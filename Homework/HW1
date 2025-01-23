@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+
 # Define the function
 def p(x):
     return (x - 2)**9  
@@ -33,6 +35,7 @@ result = 5 - 2 * np.cos(1) - 3 * np.sin(1) - 7/6
 # Print the result
 print("The result of the expression is:", result)
 
+# Problem 4
 # Define the coefficients of the quadratic equation
 a = 1
 b = -56
@@ -45,24 +48,84 @@ discriminant = b**2 - 4 * a * c
 r1 = (-b + np.sqrt(discriminant)) / (2 * a)
 r2 = (-b - np.sqrt(discriminant)) / (2 * a)
 
-def f(x, a, b, c):
-    return a * x**2 + b * x + c
+print("The roots via the Quadratic Formula are: r1 = %1.16e, r2 = %1.16e" % (r1, r2))
 
-r1eval = f(55.98, a, b, c)
-r2eval = f(0.018, a, b, c)
+#now we have to improve the accuracy of the roots by rearranging the equation for cases of b
+if (b > 0):
+    r1eval = (2 * c) / (-b - np.sqrt(discriminant))
+    r2eval = (-b - np.sqrt(discriminant)) / (2 *a)
+elif (b < 0):
+    r1eval = (-b + np.sqrt(discriminant)) / (2 *a)
+    r2eval = (2 * c) / (-b + np.sqrt(discriminant))
+else:
+    rel_error_r1 = np.sqrt(-c/a)
+    r2eval = -rel_error_r1
+
+print("The roots via the imroved formula are: r1 = %1.16e, r2 = %1.16e" %
+       (r1eval, r2eval))
+
+rel_error_r1 = np.abs(r1 - r1eval) / np.abs(r1eval)
+rel_error_r2 = np.abs(r2 - r2eval) / np.abs(r2eval)
 
 # Print the results
-print("The roots are:")
-print("r1 =", r1)
-print("r2 =", r2)
+print("Relative error: r1 = %1.4e, r2 = %1.4e" % (rel_error_r1, rel_error_r2))
 
-print("The evaluation of the roots are:")
-print("r1eval =", r1eval)
-print("r2eval =", r2eval)
+# problem 5 
+# Define the expression: -2 * sin(x + δ/2) * sin(δ/2)
+def NoSubtraction(x, delta):
+    return -2 * np.sin(x + delta / 2) * np.sin(delta / 2)
 
-rel_error_r1 = abs(r1 - r1eval) / abs(r1eval)
-rel_error_r2 = abs(r2 - r2eval) / abs(r2eval)
+# Define the reference expression: cos(x + δ) - cos(x)
+def original(x, delta):
+    return np.cos(x + delta) - np.cos(x)
 
-# Print the results
-print("Relative error of r1:", rel_error_r1)
-print("Relative error of r2:", rel_error_r2)
+#5c New algorithm
+def NewAlgorithm(x, delta):
+    return -delta * np.sin(x)
+
+# Values of x
+x_values = [np.pi, 10**6]
+
+# Values of δ (logarithmically spaced)
+delta_values = 10**np.arange(-16, 1.1, 1)  # δ = 10^-16 to 10^0
+
+# Initialize a dictionary to store differences
+differences = {x: [] for x in x_values}
+
+# Compute differences for each x and δ
+for x in x_values:
+    for delta in delta_values:
+        diff = NoSubtraction(x, delta) - original(x, delta)
+        differences[x].append(diff)
+
+# Plot the differences
+for x in x_values:
+    plt.figure()
+    plt.plot(np.log10(delta_values), differences[x], label=f"x = {x}")
+    plt.xlabel("log10(δ)")
+    plt.ylabel("Difference")
+    plt.title(f"Difference vs δ for x = {x}")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+    # Initialize a dictionary to store differences
+differences_new = {x: [] for x in x_values}
+
+# Compute differences for each x and δ
+for x in x_values:
+    for delta in delta_values:
+        diff = NewAlgorithm(x, delta) - original(x, delta)
+        differences_new[x].append(diff)
+
+# Plot the differences
+for x in x_values:
+    plt.figure()
+    plt.plot(np.log10(delta_values), differences_new[x], label=f"x = {x}")
+    plt.xlabel("log10(δ)")
+    plt.ylabel("Difference")
+    plt.title(f"Difference (Approximation - Reference) vs δ for x = {x}")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
