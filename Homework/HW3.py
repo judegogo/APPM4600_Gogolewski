@@ -123,18 +123,44 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-def fixed_point_iteration(g, x0, tol=0.5e-10, max_iter=1000):
-    x_prev = x0
-    for i in range(max_iter):
-        x_next = g(x_prev)
-        if abs(x_next - x_prev) / abs(x_next) < tol:
-            return x_next, i+1
-        x_prev = x_next
-    raise ValueError("Did not converge")
+#P5 (b)
+#Fixed Point Iteration
+# test functions
+#g(x) = x - 4*np.sin(2*x) - 3
+f1 = lambda x: -np.sin(2*x) +5*x/4 - 3/4
+# fixed point is alpha1 = 1.4987....
+f2 = lambda x: 3+2*np.sin(x)
+#fixed point is alpha2 = 3.09...
+Nmax = 100
+tol = 1e-6
+# test f1 '''
+x0 = -0.5
+# define routines
+def fixedpt(f,x0,tol,Nmax):
+#''' x0 = initial guess'''
+#''' Nmax = max number of iterations'''
+#''' tol = stopping tolerance'''
+    count = 0
+    while (count <Nmax):
+        count = count +1
+        x1 = f(x0)
+        if (abs(x1-x0) <tol):
+            xstar = x1
+            ier = 0
+            return [xstar,ier]
+        
+    x0 = x1
+    xstar = x1
+    ier = 1
+    return [xstar, ier]
 
-g2 = lambda x: (5/4)*x - np.sin(2*x) - 3/4
-
-# Test for roots near x ≈ 3.5 and x ≈ 6.5
-root1, iter1 = fixed_point_iteration(g2, x0=3.5)
-root2, iter2 = fixed_point_iteration(g2, x0=6.5)
-
+[xstar,ier] = fixedpt(f1,x0,tol,Nmax)
+print('the approximate fixed point is:',xstar)
+print('f1(xstar):',f1(xstar))
+print('Error message reads:',ier)
+#test f2 '''
+#x0 = 0.0
+#[xstar,ier] = fixedpt(f2,x0,tol,Nmax)
+#print('the approximate fixed point is:',xstar)
+#print('f2(xstar):',f2(xstar))
+#print('Error message reads:',ier)

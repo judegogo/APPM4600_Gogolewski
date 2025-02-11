@@ -36,6 +36,9 @@ def fixedpt(f,x0,tol,Nmax):
     while (count <Nmax):
         count = count +1
         x1 = f(x0)
+        x2 = f(x1)
+        x3 = f(x2)
+        x1hat = Aitkins(Nmax, tol, x0, x1, x2, f)
         if (abs(x1-x0) <tol):
             xstar = x1
             ier = 0
@@ -52,17 +55,8 @@ Nmax = 100
 tol = 1e-10
 
 def Aitkins(Nmax, tol, p0, p1, p2, f):
-    p = np.array([p0, p1, p2])
-    n = 2
-    while n <= Nmax:
-        p = np.append(p, p[n] - f(p[n]) * (p[n] - p[n - 1]) / (f(p[n]) - f(p[n - 1])))
-        if np.abs(p[n + 1] - p[n]) < tol:
-            return p[n + 1]
-        n += 1
-    return None
+    return f(p0) - ((f(p1) - f(p0))**2)/(f(p2) - 2*f(p1) + f(p0))
 
-
-    
 driver()
    
 
