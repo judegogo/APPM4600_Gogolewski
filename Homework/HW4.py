@@ -1,97 +1,122 @@
-
 # Import libraries
-import numpy as np;
-import matplotlib.pyplot as plt;
-#Problem 1:
-def fun(x):
-    return x**3+x-4;
-# We plot our function and the x-axis y=0. We notice there is a unique intersection
-# between 3 and 4.
-x = np.arange(0,np.pi,0.01);
-y = fun(x);
-plt.plot(x,y,x,0*x);
-plt.xlabel('x'); plt.ylabel('y=f(x)');
-plt.show();
-input(); #pauses until user input
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from scipy.special import erf
+from scipy.optimize import fsolve
+
+
+# Constants
+Ti = 20       # Initial temperature [°C]
+Ts = -15      # Surface temperature [°C]
+alpha = 0.138e-6  # Thermal conductivity [m²/s]
+t = 60 * 24 * 3600  # 60 days in seconds
+
+# Compute critical argument components
+sqrt_alpha_t = np.sqrt(alpha * t)
+denominator = 2 * sqrt_alpha_t
+
+# Define the function f(x)
+def f(x):
+    return erf(x / denominator) - 0.42857  # Corrected
+
+# Define the derivative f'(x)
+def df(x):
+    return (2 / (np.sqrt(np.pi) * denominator)) * np.exp(-(x / denominator) ** 2)
+
+# Find x_bar where f(x_bar) > 0 (we'll use 1 meter as upper bound)
+x_max = 1.0  # meters (chosen because f(1) > 0 based on manual calculation)
+
+# Plot the function
+x_vals = np.linspace(0, x_max, 1000)
+plt.figure(figsize=(10, 6))
+plt.plot(x_vals, f(x_vals), label='f(x)')
+plt.axhline(0, color='red', linestyle='--', alpha=0.5)
+plt.title("Root Finding Problem for Water Main Depth")
+plt.xlabel("Depth x [meters]")
+plt.ylabel("f(x)")
+plt.grid(True)
+plt.legend()
+plt.show()
+
 ################################################################################
-# We now implement the bisection method. Note that this can also be written in a
-# separate python file and imported as a module
-def bisect_method(f,a,b,tol,nmax,vrb=False):
-#Bisection method applied to f between a and b
-# Initial values for interval [an,bn], midpoint xn
-    an = a; bn=b; n=0;
-    xn = (an+bn)/2;
-# Current guess is stored at rn[n]
-    rn=np.array([xn]);
-    r=xn;
-    ier=0;
-    if vrb:
-        print("\n Bisection method with nmax=%d and tol=%1.1e\n" % (nmax, tol));
-    # The code cannot work if f(a) and f(b) have the same sign.
-    # In this case, the code displays an error message, outputs empty answers and exits.
-    if f(a)*f(b)>=0:
-        print("\n Interval is inadequate, f(a)*f(b)>=0. Try again \n")
-        print("f(a)*f(b) = %1.1f \n" % f(a)*f(b));
-        r = None;
-        return r
-    else:
-#If f(a)f(b), we proceed with the method.
-        if vrb:
-            print("\n|--n--|--an--|--bn--|----xn----|-|bn-an|--|---|f(xn)|---|");
-        # We start two plots as subplots in the same figure.
-            fig, (ax1, ax2) = plt.subplots(1, 2); #Creates figure fig and subplots
-            fig.suptitle('Bisection method results'); #Sets title of the figure
-            ax1.set(xlabel='x',ylabel='y=f(x)'); #Sets labels for axis for subplot 1
-# We plot y=f(x) on the left subplot.
-            xl=np.linspace(a,b,100,endpoint=True); yl=f(xl);
-            ax1.plot(xl,yl);
-    while n<=nmax:
-        if vrb:
-            print("|--%d--|%1.4f|%1.4f|%1.8f|%1.8f|%1.8f|" % (n,an,bn,xn,bn-
-            an,np.abs(f(xn))));
-################################################################
-# Plot results of bisection on subplot 1 of 2 (horizontal).
-            xint = np.array([an,bn]);
-            yint=f(xint);
-            ax1.plot(xint,yint,'ko',xn,f(xn),'rs');
-################################################################
-# Bisection method step: test subintervals [an,xn] and [xn,bn]
-# If the estimate for the error (root-xn) is less than tol, exit
-        if (bn-an)<2*tol: # better test than np.abs(f(xn))<tol
-            ier=1;
-            break;
-# If f(an)*f(xn)<0, pick left interval, update bn
-        if f(an)*f(xn)<0:
-            bn=xn;
-        else:
-#else, pick right interval, update an
-            an=xn;
-# update midpoint xn, increase n.
-        n += 1;
-        xn = (an+bn)/2;
-        rn = np.append(rn,xn);
-# Set root estimate to xn.
+# Newton's and Secant Methods for f(x) = x^6 - x - 1
+
+def newton_method(f, f_prime, x0, tol=1e-10, max_iter=100):
+    x = x0
+    errors = []
+    approximations = [x]
     
-    r=xn;
-    if vrb:
-########################################################################
-# subplot 2: approximate error log-log plot
-        e = np.abs(r-rn[0:n]);
-#length of interval
-        ln = (b-a)*np.exp2(-np.arange(0,e.size));
-#log-log plot error vs interval length
-        ax2.plot(-np.log2(ln),np.log2(e),'r--');
-        ax2.set(xlabel='-log2(bn-an)',ylabel='log2(error)');
-########################################################################
-    return r, rn;
-################################################################################
-# Now, we run this method for our example function
-# We set the interval [a,b]
-(r,rn)=bisect_method(fun,1,4,1e-3,100,True);
-plt.show();
-input(); #pause until user input.
-# Finally, we can check that |r-rn| is proportional to (1/2)^n, and so,
-# log10|r-rn| ~ n (log10(1/2)) + C.
-en = np.abs(r-rn[0:len(rn)-1]);
-c1 = np.polyfit(np.arange(0,len(en)),np.log10(en),1);
-print(10**c1); # 10 to the power of this coefficient is approximately equal to 0.5
+    for _ in range(max_iter):
+        x_new = x - f(x) / f_prime(x)
+        errors.append(abs(x_new - x))
+        approximations.append(x_new)
+        
+        if abs(x_new - x) < tol:
+            break
+            
+        x = x_new
+
+    return approximations, errors
+
+def secant_method(f, x0, x1, tol=1e-10, max_iter=100):
+    errors = []
+    approximations = [x0, x1]
+    
+    for _ in range(max_iter):
+        if abs(f(x1) - f(x0)) < tol:
+            break
+            
+        x_new = x1 - f(x1) * (x1 - x0) / (f(x1) - f(x0))
+        errors.append(abs(x_new - x1))
+        approximations.append(x_new)
+        
+        if abs(x_new - x1) < tol:
+            break
+            
+        x0, x1 = x1, x_new
+
+    return approximations, errors
+
+# Define function and derivative for root finding
+def f_root(x):
+    return x**6 - x - 1
+
+def f_prime_root(x):
+    return 6*x**5 - 1
+
+# Compute roots
+x0_newton = 2
+x0_secant, x1_secant = 2, 1
+
+approximations_newton, errors_newton = newton_method(f_root, f_prime_root, x0_newton)
+approximations_secant, errors_secant = secant_method(f_root, x0_secant, x1_secant)
+
+# Compute the exact root numerically
+exact_root = fsolve(f_root, 2)[0]
+
+# Create error tables
+error_table_newton = np.abs(np.array(approximations_newton) - exact_root)
+error_table_secant = np.abs(np.array(approximations_secant) - exact_root)
+
+# Create a DataFrame for error tables
+df_errors = pd.DataFrame({
+    "Iteration": np.arange(max(len(error_table_newton), len(error_table_secant))),
+    "Newton Error": np.pad(error_table_newton, (0, max(0, len(error_table_secant) - len(error_table_newton))), 'constant', constant_values=np.nan),
+    "Secant Error": np.pad(error_table_secant, (0, max(0, len(error_table_newton) - len(error_table_secant))), 'constant', constant_values=np.nan)
+})
+
+# Display error table
+print(df_errors)  # Print table in console
+df_errors.to_csv("error_table.csv", index=False)  # Save as CSV for later inspection
+
+# Log-Log Plot
+plt.figure(figsize=(8,6))
+plt.loglog(error_table_newton[:-1], error_table_newton[1:], 'o-', label="Newton's Method")
+plt.loglog(error_table_secant[:-1], error_table_secant[1:], 's-', label="Secant Method")
+plt.xlabel(r"$|x_k - \alpha|$")
+plt.ylabel(r"$|x_{k+1} - \alpha|$")
+plt.title("Convergence Order Comparison")
+plt.legend()
+plt.grid(True, which="both", linestyle="--")
+plt.show()
