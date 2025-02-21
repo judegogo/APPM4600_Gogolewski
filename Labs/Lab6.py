@@ -49,7 +49,7 @@ def driver():
     plt.plot(np.arange(numN-1),np.log10(errN+1e-18),'b-o',label='Newton');
     plt.plot(np.arange(numLN-1),np.log10(errLN+1e-18),'r-o',label='Lazy Newton');
     plt.plot(np.arange(numLN-1),np.log10(errLN+1e-18),'g-o',label='Slacker Newton');
-    plt.title('Newton, Broyden and Lazy Newton iterations log10|r-rn|');
+    plt.title('Newton, Slacker and Lazy Newton iterations log10|r-rn|');
     plt.legend();
     plt.show();
 
@@ -439,6 +439,7 @@ def slacker_newton_method_nd(f,Jf,x0,tol,nmax,verb=False):
         #if n%10==0: #Compute Jacobian every 10 iterations
             # compute n x n Jacobian matrix
         #    Jn = Jf(xn);
+        #    lu, piv = lu_factor(Jn);
         #Alternatively, we could compute the Jacobian apon reaching a certain tollerance 
         #We Aim to get to 10^-10 tol, so we could compute the Jacobian when the Newton step is smaller than 10^-5
         if npn<1e-5:
@@ -466,6 +467,48 @@ def slacker_newton_method_nd(f,Jf,x0,tol,nmax,verb=False):
             print("Lazy Newton method converged, n=%d, |F(xn)|=%1.1e\n" % (n,np.linalg.norm(Fn)));
 
     return (r,rn,nf,nJ);
+
+def newton_method_ApproxJ(f,Jf,x0,tol,nmax,verb=False):
+
+    # Initialize arrays and function value
+    xn = x0; #initial guess
+    rn = x0; #list of iterates
+    Fn = f(xn); #function value vector
+    n=0;
+    nf=1; nJ=0; #function and Jacobian evals
+    npn=1;
+    h = np.array([0.01 * 2.** (-np.arange(0,10)), 0.01 * 2.** (-np.arange(0,10))]);
+    denom = np.array([1/(2*h[0]),1/(2*h[1])]);
+    if verb:
+        print("|--n--|----xn----|---|f(xn)|---|");
+
+    while npn>tol and n<=nmax:
+        # compute n x n Jacobian matrix
+        ApproxJn = denom * (f(xn+h)-f(xn-h));
+        ApproxnJ+=1;
+
+        if verb:
+            print("|--%d--|%1.7f|%1.12f|" %(n,np.linalg.norm(xn),np.linalg.norm(Fn)));
+
+        # Newton step (we could check whether Jn is close to singular here)
+        pn = -np.linalg.solve(Jn,Fn);
+        xn = xn + pn;
+        npn = np.linalg.norm(pn); #size of Newton step
+
+        n+=1;
+        rn = np.vstack((rn,xn));
+        Fn = f(xn);
+        nf+=1;
+
+    r=xn;
+
+    if verb:
+        if np.linalg.norm(Fn)>tol:
+            print("Newton method failed to converge, n=%d, |F(xn)|=%1.1e\n" % (nmax,np.linalg.norm(Fn)));
+        else:
+            print("Newton method converged, n=%d, |F(xn)|=%1.1e\n" % (n,np.linalg.norm(Fn)));
+
+    return (r,rn,nf,ApproxnJ);
 
 # Execute driver
 driver()
