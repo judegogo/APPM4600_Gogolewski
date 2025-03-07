@@ -25,6 +25,9 @@ def barycentric_weights(xi):
             if i != j:
                 w[j] /= (xi[j] - xi[i])
     return w
+
+def chebyshev_points(n):
+    return np.cos((2 * np.arange(1, n + 1) - 1) * np.pi / (2 * n))
 # Barycentric interpolation formula 
 def barycentric_lagrange(x, xi, yi, w):
     numerator = np.zeros_like(x, dtype=np.float64)
@@ -55,7 +58,9 @@ plt.figure(figsize=(8,6))
 
 
 for N in range(2, 21):
-    xi = np.linspace(-1, 1, N)
+    
+    #xi = np.linspace(-1, 1, N) #Problem 1,2 
+    xi = chebyshev_points(N) #Problem 3
     yi = f(xi)
     
     # Compute interpolating polynomial
@@ -74,7 +79,7 @@ for N in range(2, 21):
     plt.title(f'Interpolation using Vandermonde Matrix (N={N})')
     plt.legend()
     plt.grid()
-    plt.pause(0.5)  # Pause for visualization step-by-step
+    plt.pause(2.0)  # Pause for visualization step-by-step
     
     # Stop when the max polynomial value reaches about 100
     if np.max(np.abs(y_poly)) > 100:
@@ -83,7 +88,8 @@ for N in range(2, 21):
 plt.show()
 
 for N in range(2, 21):
-    xi = np.linspace(-1, 1, N)
+    #xi = np.linspace(-1, 1, N) #Problem 1,2 
+    xi = chebyshev_points(N) #Problem 3
     yi = f(xi)
     
     # Compute barycentric weights
