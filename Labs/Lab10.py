@@ -15,16 +15,15 @@ def eval_legendre(n,x):
     p[j] = lambda x: (2*j-1)/j*x*p[j-1](x) - (j-1)/j*p[j-2](x)
   return p
 
-def eval_chebyshev(n,x):
-# This subroutine evaluates the Chebyshev polynomials at x that are needed
-# by calling your code from prelab
-  p = [None]*(n+1)
-  p[0] = lambda x: 1.0
-  if n>0:
-    p[1] = lambda x: x
-  for j in range(2,n+1):
-    p[j] = lambda x: 2*x*p[j-1](x) - p[j-2](x)
-  return p
+def eval_chebyshev(n, x):
+    # This subroutine evaluates the Chebyshev polynomials at x that are needed
+    p = [None] * (n + 1)
+    p[0] = lambda x: 1.0
+    if n > 0:
+        p[1] = lambda x: x
+    for j in range(2, n + 1):
+        p[j] = (lambda j: lambda x: (2 * j - 1) / j * x * p[j - 1](x) - (j - 1) / j * p[j - 2](x))(j)
+    return p
 
 def driver():
 
